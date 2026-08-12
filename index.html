@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACN 下载中心</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    :root {
+      --bg: #1a1a22;
+      --text-title: #ffffff;
+      --text-dim: #71717a;
+      --text-body: #a1a1aa;
+      --accent: #7dd3fc;
+      --accent-2: #a78bfa;
+      --accent-dim: rgba(125,211,252,0.12);
+      --danger: #fca5a5;
+      --success: #86efac;
+      --warn: #fbbf24;
+      --card-bg: rgba(255,255,255,0.03);
+      --card-border: rgba(255,255,255,0.06);
+      --card-disabled-bg: rgba(255,255,255,0.015);
+      --card-disabled-border: rgba(255,255,255,0.04);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse at top, rgba(125,211,252,0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom, rgba(167,139,250,0.06) 0%, transparent 50%);
+      color: var(--text-dim);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--bg);
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(125,211,252,0.2);
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-title);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 32px;
+    }
+    /* ===== 状态提示 ===== */
+    .status {
+      font-size: 14px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--accent-dim);
+      border-top: 2px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--success); }
+    .retry-link {
+      display: none;
+      margin-top: 16px;
+      color: var(--accent);
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .retry-link.show { display: inline-block; }
+
+    /* ===== 站点选择卡片 ===== */
+    .site-list {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .site-list.show { display: flex; }
+    .site-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: var(--text-body);
+    }
+    .site-card:not(.disabled):hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(125,211,252,0.08);
+    }
+    .site-card.disabled {
+      background: var(--card-disabled-bg);
+      border-color: var(--card-disabled-border);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    .site-card-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .site-card-icon.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: var(--bg);
+    }
+    .site-card-icon.inactive {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-dim);
+    }
+    .site-card-info { flex: 1; }
+    .site-card-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-title);
+      margin-bottom: 2px;
+    }
+    .site-card.disabled .site-card-name {
+      color: var(--text-dim);
+    }
+    .site-card-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .site-card-badge {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-closed {
+      background: rgba(252,165,165,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(252,165,165,0.2);
+    }
+    .badge-open {
+      background: rgba(134,239,172,0.1);
+      color: var(--success);
+      border: 1px solid rgba(134,239,172,0.2);
+    }
+    .maintenance-msg {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      background: rgba(251,191,36,0.06);
+      border: 1px solid rgba(251,191,36,0.15);
+      color: var(--warn);
+      font-size: 13px;
+      text-align: center;
+      max-width: 380px;
+      line-height: 1.6;
+    }
+    .maintenance-msg.show { display: block; }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">A</div>
+  <div class="title">ACN 下载中心</div>
+  <div class="subtitle">口令码兑换 · 文件下载</div>
+
+  <!-- 状态提示（加载中/错误） -->
+  <div class="status" id="statusMsg">
+    <div class="spinner" id="spinner"></div>
+    <span>正在连接服务器...</span>
+  </div>
+  <div class="retry-link" id="retryLink" onclick="retry()">重试</div>
+
+  <!-- 站点选择列表（开关关闭时显示） -->
+  <div class="site-list" id="siteList">
+    <div class="site-card disabled" id="siteCard">
+      <div class="site-card-icon inactive" id="siteIcon">📦</div>
+      <div class="site-card-info">
+        <div class="site-card-name" id="siteName">下载中心</div>
+        <div class="site-card-desc">口令码兑换 · 文件下载</div>
+      </div>
+      <div class="site-card-badge badge-closed" id="siteBadge">已关闭</div>
+    </div>
+  </div>
+
+  <!-- 维护公告 -->
+  <div class="maintenance-msg" id="maintMsg"></div>
+
+  <div class="footer">&copy; 2026 ACN 下载中心 All rights reserved.<br>本网站所有权归 忘本的可可 所有</div>
+
+  <script>
+    var REPO = 'xnnkk/Xnnkk-ACN';
+
+    function setStatus(text, type) {
+      var el = document.getElementById('statusMsg');
+      el.className = 'status' + (type ? ' ' + type : '');
+      el.innerHTML = (type ? '' : '<div class="spinner" id="spinner"></div>') + '<span>' + text + '</span>';
+      var retry = document.getElementById('retryLink');
+      if (type === 'error') retry.classList.add('show');
+      else retry.classList.remove('show');
+    }
+
+    function hideStatus() {
+      document.getElementById('statusMsg').style.display = 'none';
+      document.getElementById('retryLink').style.display = 'none';
+    }
+
+    function httpGet(url, onSuccess, onError) {
+      var xhr = new XMLHttpRequest();
+      xhr.timeout = 8000;
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            onSuccess(xhr.responseText.trim());
+          } else {
+            onError('HTTP ' + xhr.status);
+          }
+        }
+      };
+      xhr.ontimeout = function() { onError('timeout'); };
+      xhr.onerror = function() { onError('network error'); };
+      try { xhr.open('GET', url, true); xhr.send(); }
+      catch (e) { onError(e.message); }
+    }
+
+    // 多源获取（GitHub Pages 原始 / jsDelivr CDN / raw.githubusercontent）
+    function fetchFromSources(filename, onSuccess, onError) {
+      var sources = [
+        filename + '?t=' + Date.now(),
+        'https://cdn.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
+        'https://raw.githubusercontent.com/' + REPO + '/main/' + filename + '?t=' + Date.now()
+      ];
+      var index = 0;
+      function tryNext() {
+        if (index >= sources.length) {
+          onError('all sources failed');
+          return;
+        }
+        var src = sources[index];
+        index++;
+        httpGet(src, function(text) {
+          if (text && text.length > 0) {
+            onSuccess(text);
+          } else {
+            tryNext();
+          }
+        }, function() { tryNext(); });
+      }
+      tryNext();
+    }
+
+    // ===== 主流程：先读开关，再决定行为 =====
+    function init() {
+      setStatus('正在检查服务状态...', '');
+      fetchFromSources('switch.json', function(text) {
+        var config;
+        try {
+          config = JSON.parse(text);
+        } catch (e) {
+          // switch.json 解析失败，默认开启
+          startRedirect();
+          return;
+        }
+
+        if (config.enabled === false) {
+          // ===== 网站已关闭 =====
+          showSiteClosed(config.message || '');
+        } else {
+          // ===== 网站开启，正常跳转 =====
+          startRedirect();
+        }
+      }, function() {
+        // switch.json 获取失败，默认开启（向后兼容）
+        startRedirect();
+      });
+    }
+
+    // 正常跳转流程（和原来一样）
+    function startRedirect() {
+      setStatus('正在连接服务器...', '');
+      fetchFromSources('url.txt', function(text) {
+        if (text && text.indexOf('http') === 0) {
+          setStatus('✓ 连接成功，正在跳转...', 'success');
+          window.location.href = text.replace(/\/+$/, '');
+        } else {
+          setStatus('⚠ 服务器暂时无法连接，请稍后重试', 'error');
+        }
+      }, function() {
+        setStatus('⚠ 服务器暂时无法连接，请稍后重试', 'error');
+      });
+    }
+
+    // 显示站点关闭界面
+    function showSiteClosed(message) {
+      hideStatus();
+      document.getElementById('siteList').classList.add('show');
+      if (message) {
+        var msgEl = document.getElementById('maintMsg');
+        msgEl.textContent = message;
+        msgEl.classList.add('show');
+      }
+    }
+
+    function retry() {
+      document.getElementById('siteList').classList.remove('show');
+      document.getElementById('maintMsg').classList.remove('show');
+      document.getElementById('statusMsg').style.display = '';
+      init();
+    }
+
+    // 启动
+    init();
+
+    (function() {
+      var CURRENT_VERSION = '31';
+      try {
+        var stored = localStorage.getItem('redirect_portal_version');
+        if (stored !== CURRENT_VERSION) {
+          localStorage.setItem('redirect_portal_version', CURRENT_VERSION);
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>
