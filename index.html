@@ -245,9 +245,9 @@
       document.getElementById('retryLink').style.display = 'none';
     }
 
-    function httpGet(url, onSuccess, onError) {
+    function httpGet(url, onSuccess, onError, timeoutMs) {
       var xhr = new XMLHttpRequest();
-      xhr.timeout = 8000;
+      xhr.timeout = timeoutMs || 5000;
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status >= 200 && xhr.status < 300) {
@@ -263,30 +263,37 @@
       catch (e) { onError(e.message); }
     }
 
-    // 多源获取（GitHub Pages 原始 / jsDelivr CDN / raw.githubusercontent）
+    // 多源并行获取：同时请求所有源，谁先成功用谁（安卓/弱网环境关键优化）
     function fetchFromSources(filename, onSuccess, onError) {
       var sources = [
         filename + '?t=' + Date.now(),
+        'https://fastly.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
         'https://cdn.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
+        'https://gcore.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
         'https://raw.githubusercontent.com/' + REPO + '/main/' + filename + '?t=' + Date.now()
       ];
-      var index = 0;
-      function tryNext() {
-        if (index >= sources.length) {
-          onError('all sources failed');
-          return;
+      var done = false;
+      var pending = sources.length;
+      function succeed(text) {
+        if (done) return;
+        if (text && text.length > 0) {
+          done = true;
+          onSuccess(text);
+        } else {
+          fail();
         }
-        var src = sources[index];
-        index++;
-        httpGet(src, function(text) {
-          if (text && text.length > 0) {
-            onSuccess(text);
-          } else {
-            tryNext();
-          }
-        }, function() { tryNext(); });
       }
-      tryNext();
+      function fail() {
+        if (done) return;
+        pending--;
+        if (pending <= 0) {
+          done = true;
+          onError('all sources failed');
+        }
+      }
+      for (var i = 0; i < sources.length; i++) {
+        httpGet(sources[i], succeed, fail, 5000);
+      }
     }
 
     // ===== 主流程：先读开关，再决定行为 =====
@@ -323,10 +330,10 @@
           setStatus('✓ 连接成功，正在跳转...', 'success');
           window.location.href = text.replace(/\/+$/, '');
         } else {
-          setStatus('⚠ 服务器暂时无法连接，请稍后重试', 'error');
+          setStatus('⚠ 服务器暂时无法连接，请检查网络后重试', 'error');
         }
       }, function() {
-        setStatus('⚠ 服务器暂时无法连接，请稍后重试', 'error');
+        setStatus('⚠ 无法连接服务器（网络受限或 DNS 被拦截），请尝试切换网络或更换浏览器', 'error');
       });
     }
 
