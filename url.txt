@@ -1,1 +1,1 @@
-https://roster-ought-binary-channels.trycloudflare.com
+https://api.trycloudflare.com
