@@ -263,37 +263,77 @@
       catch (e) { onError(e.message); }
     }
 
-    // 多源并行获取：同时请求所有源，谁先成功用谁（安卓/弱网环境关键优化）
+    // 两级源获取：先请求可信源（同源 GitHub Pages / raw，无 CDN 缓存问题），
+    // 全部失败才启动 jsDelivr CDN 后备。避免 CDN 缓存旧隧道导致乱跳转。
     function fetchFromSources(filename, onSuccess, onError) {
-      var sources = [
-        filename + '?t=' + Date.now(),
-        'https://fastly.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
-        'https://cdn.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
-        'https://gcore.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + Date.now(),
-        'https://raw.githubusercontent.com/' + REPO + '/main/' + filename + '?t=' + Date.now()
-      ];
+      var ts = Date.now();
       var done = false;
-      var pending = sources.length;
-      function succeed(text) {
-        if (done) return;
-        if (text && text.length > 0) {
-          done = true;
-          onSuccess(text);
-        } else {
-          fail();
+
+      // ===== 一级源：可信源（数据永远是 GitHub 最新） =====
+      function tryPrimary() {
+        var primary = [
+          filename + '?t=' + ts,
+          'https://raw.githubusercontent.com/' + REPO + '/main/' + filename + '?t=' + ts
+        ];
+        var pending = primary.length;
+        var resolved = false;
+        function pFail() {
+          if (resolved || done) return;
+          pending--;
+          if (pending <= 0) {
+            resolved = true;
+            tryFallback();
+          }
+        }
+        function pSucceed(text) {
+          if (resolved || done) return;
+          if (text && text.length > 0) {
+            resolved = true;
+            done = true;
+            onSuccess(text);
+          } else {
+            pFail();
+          }
+        }
+        for (var i = 0; i < primary.length; i++) {
+          httpGet(primary[i], pSucceed, pFail, 5000);
         }
       }
-      function fail() {
-        if (done) return;
-        pending--;
-        if (pending <= 0) {
-          done = true;
-          onError('all sources failed');
+
+      // ===== 二级源：jsDelivr CDN（仅一级源全部失败后启用） =====
+      function tryFallback() {
+        var fallback = [
+          'https://fastly.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + ts,
+          'https://cdn.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + ts,
+          'https://gcore.jsdelivr.net/gh/' + REPO + '@main/' + filename + '?t=' + ts
+        ];
+        var pending = fallback.length;
+        var resolved = false;
+        function fFail() {
+          if (resolved || done) return;
+          pending--;
+          if (pending <= 0) {
+            resolved = true;
+            done = true;
+            onError('all sources failed');
+          }
+        }
+        function fSucceed(text) {
+          if (resolved || done) return;
+          if (text && text.length > 0) {
+            resolved = true;
+            done = true;
+            onSuccess(text);
+          } else {
+            fFail();
+          }
+        }
+        for (var i = 0; i < fallback.length; i++) {
+          httpGet(fallback[i], fSucceed, fFail, 5000);
         }
       }
-      for (var i = 0; i < sources.length; i++) {
-        httpGet(sources[i], succeed, fail, 5000);
-      }
+
+      tryPrimary();
     }
 
     // ===== 主流程：先读开关，再决定行为 =====
