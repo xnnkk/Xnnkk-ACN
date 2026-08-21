@@ -271,12 +271,15 @@
 
       // ===== 一级源：可信源（数据永远是 GitHub 最新） =====
       function tryPrimary() {
-        var primary = [
-          filename + '?t=' + ts,
-          'https://raw.githubusercontent.com/' + REPO + '/main/' + filename + '?t=' + ts
-        ];
-        var pending = primary.length;
+        var pending = 2;
         var resolved = false;
+        // 同源（GitHub Pages）立即发——与跳转页同 CDN，更新最快、最可靠
+        httpGet(filename + '?t=' + ts, pSucceed, pFail, 5000);
+        // raw.githubusercontent 延迟 400ms 再发，避免其 CDN 缓存旧数据抢答
+        setTimeout(function() {
+          if (resolved || done) return;
+          httpGet('https://raw.githubusercontent.com/' + REPO + '/main/' + filename + '?t=' + ts, pSucceed, pFail, 5000);
+        }, 400);
         function pFail() {
           if (resolved || done) return;
           pending--;
@@ -294,9 +297,6 @@
           } else {
             pFail();
           }
-        }
-        for (var i = 0; i < primary.length; i++) {
-          httpGet(primary[i], pSucceed, pFail, 5000);
         }
       }
 
