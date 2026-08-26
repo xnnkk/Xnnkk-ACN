@@ -362,18 +362,42 @@
       });
     }
 
-    // 正常跳转流程（和原来一样）
+    // 正常跳转流程：先取 url.txt，再验证隧道可访问性，正常才跳转
     function startRedirect() {
       setStatus('正在连接服务器...', '');
       fetchFromSources('url.txt', function(text) {
         if (text && text.indexOf('http') === 0) {
-          setStatus('✓ 连接成功，正在跳转...', 'success');
-          window.location.href = text.replace(/\/+$/, '');
+          verifyTunnel(text.replace(/\/+$/, ''));
         } else {
           setStatus('⚠ 服务器暂时无法连接，请检查网络后重试', 'error');
         }
       }, function() {
         setStatus('⚠ 无法连接服务器（网络受限或 DNS 被拦截），请尝试切换网络或更换浏览器', 'error');
+      });
+    }
+
+    // 跳转前验证隧道地址是否可访问、存在、正常（HTTP 200-299 才放行，异常终止跳转）
+    function verifyTunnel(url) {
+      setStatus('正在验证服务器状态...', '');
+      var controller = new AbortController();
+      var timer = setTimeout(function() { controller.abort(); }, 8000);
+      fetch(url + '/', {
+        method: 'HEAD',
+        mode: 'cors',
+        cache: 'no-store',
+        redirect: 'follow',
+        signal: controller.signal
+      }).then(function(resp) {
+        clearTimeout(timer);
+        if (resp.ok) {
+          setStatus('✓ 连接成功，正在跳转...', 'success');
+          setTimeout(function() { window.location.href = url; }, 350);
+        } else {
+          setStatus('⚠ 服务器暂时不可用（HTTP ' + resp.status + '），请稍后重试', 'error');
+        }
+      }).catch(function() {
+        clearTimeout(timer);
+        setStatus('⚠ 服务器暂时不可用，请稍后重试', 'error');
       });
     }
 
@@ -399,7 +423,7 @@
     init();
 
     (function() {
-      var CURRENT_VERSION = '31';
+      var CURRENT_VERSION = '32';
       try {
         var stored = localStorage.getItem('redirect_portal_version');
         if (stored !== CURRENT_VERSION) {
