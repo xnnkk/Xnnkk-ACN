@@ -206,6 +206,82 @@
     html[data-theme="light"] .stage-mark { color: rgba(15, 17, 21, 0.86); text-shadow: 0 2px 18px rgba(255, 255, 255, 0.5); }
     html[data-theme="light"] .stage-sub { color: rgba(15, 17, 21, 0.55); }
 
+    /* ===== 进入按钮（黑白 + 毛玻璃 + 圆角，纯色描边，不用渐变边框） ===== */
+    .enter-panel {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .enter-panel.hidden { display: none; }
+    .enter-btn {
+      min-width: 176px;
+      height: 48px;
+      padding: 0 28px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      background: rgba(255, 255, 255, 0.10);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      color: rgba(249, 250, 251, 0.96);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background-color .2s ease, border-color .2s ease, transform .2s ease, opacity .2s ease;
+    }
+    .enter-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.19);
+      border-color: rgba(255, 255, 255, 0.36);
+      transform: translateY(-1px);
+    }
+    .enter-btn:active:not(:disabled) { transform: translateY(0); }
+    .enter-btn:disabled, .enter-btn.is-offline {
+      opacity: .42;
+      filter: grayscale(1);
+      cursor: not-allowed;
+      pointer-events: none;
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.10);
+    }
+    html[data-theme="light"] .enter-btn {
+      color: rgba(15, 17, 21, 0.92);
+      background: rgba(255, 255, 255, 0.58);
+      border-color: rgba(15, 17, 21, 0.16);
+    }
+    html[data-theme="light"] .enter-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.78);
+      border-color: rgba(15, 17, 21, 0.30);
+    }
+    html[data-theme="light"] .enter-btn:disabled,
+    html[data-theme="light"] .enter-btn.is-offline {
+      background: rgba(240, 240, 242, 0.52);
+      border-color: rgba(15, 17, 21, 0.10);
+    }
+    .enter-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(249, 250, 251, 0.74);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+    }
+    html[data-theme="light"] .enter-status {
+      color: rgba(15, 17, 21, 0.66);
+      text-shadow: 0 1px 8px rgba(255, 255, 255, 0.6);
+    }
+    .enter-dot {
+      flex: none;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(249, 250, 251, 0.45);
+    }
+    .enter-dot.checking { background: #f59e0b; }
+    .enter-dot.online { background: #22c55e; }
+    .enter-dot.offline, .enter-dot.closed { background: #ef4444; }
+
     /* ===== 状态提示 ===== */
     .status {
       font-size: 14px;
@@ -404,6 +480,8 @@
       }
       .stage-inner { padding: 48px 0; }
       .stage-mark { font-size: 44px; letter-spacing: 6px; }
+      .enter-panel { margin-top: 22px; }
+      .enter-btn { width: 100%; max-width: 320px; height: 46px; }
       /* 窄屏横版背景会被 cover 裁成竖条：换成同源竖版裁切，人物完整可见且不被顶部侧栏块盖住脸 */
       .site-bg {
         left: 0;
@@ -468,6 +546,10 @@
     <div class="stage-inner">
       <div class="stage-mark">ACN</div>
       <div class="stage-sub">CLIENT</div>
+      <div class="enter-panel" id="enterPanel">
+        <button class="enter-btn is-offline" id="enterBtn" type="button" disabled>进入网站</button>
+        <div class="enter-status"><span class="enter-dot checking" id="enterDot"></span><span id="enterStatusText">正在检查服务器状态…</span></div>
+      </div>
     </div>
     <footer class="footer">
       <span>Copyright &copy; 2026 ACN CLIENT All Rights Reserved. 本网站所有权归 ACN CLIENT 所有</span>
@@ -585,78 +667,136 @@
       tryPrimary();
     }
 
-    // ===== 主流程：先读开关，再决定行为 =====
-    function init() {
-      setStatus('正在检查服务状态...', '');
-      fetchFromSources('switch.json', function(text) {
-        var config;
-        try {
-          config = JSON.parse(text);
-        } catch (e) {
-          // switch.json 解析失败，默认开启
-          startRedirect();
-          return;
-        }
+    // ===== 服务器状态 + 「进入」按钮（不再自动跳转） =====
+    var enterState = { url: '', online: false, checking: false, enabled: true };
+    var CHECK_INTERVAL = 20000;
 
-        if (config.enabled === false) {
-          // ===== 网站已关闭 =====
-          showSiteClosed(config.message || '');
-        } else {
-          // ===== 网站开启，正常跳转 =====
-          startRedirect();
-        }
-      }, function() {
-        // switch.json 获取失败，默认开启（向后兼容）
-        startRedirect();
-      });
+    function setEnterState(kind, text) {
+      var btn = document.getElementById('enterBtn');
+      var dot = document.getElementById('enterDot');
+      var txt = document.getElementById('enterStatusText');
+      var online = (kind === 'online');
+      btn.disabled = !online;
+      btn.classList.toggle('is-offline', !online);
+      btn.textContent = kind === 'checking' ? '正在检查…' : '进入网站';
+      dot.className = 'enter-dot ' + kind;
+      txt.textContent = text;
+      // 侧栏状态只在异常时露出（含「重试」入口）；检查中保持原状，避免轮询闪烁
+      if (kind === 'offline' || kind === 'closed') {
+        document.getElementById('statusMsg').style.display = '';
+        document.getElementById('retryLink').style.display = '';
+        setStatus('⚠ ' + text, 'error');
+      } else if (online) {
+        hideStatus();
+      }
     }
 
-    // 正常跳转流程：先取 url.txt，再验证隧道可访问性，正常才跳转
-    function startRedirect() {
-      setStatus('正在连接服务器...', '');
-      fetchFromSources('url.txt', function(text) {
-        if (text && text.indexOf('http') === 0) {
-          var url = text.replace(/\/+$/, '');
-          // 用户协议链接指向主站协议页
-          var terms = document.getElementById('termsLink');
-          if (terms) terms.href = url + '/agreement.html';
-          verifyTunnel(url);
-        } else {
-          setStatus('⚠ 服务器暂时无法连接，请检查网络后重试', 'error');
-        }
-      }, function() {
-        setStatus('⚠ 无法连接服务器（网络受限或 DNS 被拦截），请尝试切换网络或更换浏览器', 'error');
-      });
-    }
-
-    // 跳转前验证隧道地址是否可访问、存在、正常（HTTP 200-299 才放行，异常终止跳转）
-    function verifyTunnel(url) {
-      setStatus('正在验证服务器状态...', '');
+    // 真实健康检查：/api/ping 是后端专用的轻量存活探测（no-store、CORS 全开），
+    // 比 HEAD / 更能反映后端进程是否活着。429 说明后端仍在响应，不算掉线。
+    function checkServer(url, cb) {
       var controller = new AbortController();
       var timer = setTimeout(function() { controller.abort(); }, 8000);
-      fetch(url + '/', {
-        method: 'HEAD',
+      fetch(url + '/api/ping?_=' + Date.now(), {
+        method: 'GET',
         mode: 'cors',
         cache: 'no-store',
         redirect: 'follow',
         signal: controller.signal
       }).then(function(resp) {
         clearTimeout(timer);
-        if (resp.ok) {
-          setStatus('✓ 连接成功，正在跳转...', 'success');
-          setTimeout(function() { window.location.href = url; }, 350);
-        } else {
-          setStatus('⚠ 服务器暂时不可用（HTTP ' + resp.status + '），请稍后重试', 'error');
-        }
+        cb(resp.ok || resp.status === 429, resp.status);
       }).catch(function() {
         clearTimeout(timer);
-        setStatus('⚠ 服务器暂时掉线，请稍后重试...', 'error');
+        cb(false, 0);
       });
     }
 
-    // 显示站点关闭界面
-    function showSiteClosed(message) {
+    // 每轮重新取 url.txt：隧道重启后地址会变，不能缓存旧地址
+    function refresh() {
+      if (!enterState.enabled || enterState.checking) return;
+      enterState.checking = true;
+      setEnterState('checking', '正在检查服务器状态…');
+      fetchFromSources('url.txt', function(text) {
+        if (!text || text.indexOf('http') !== 0) {
+          enterState.checking = false;
+          enterState.online = false;
+          setEnterState('offline', '服务器地址获取失败，暂不可进入');
+          return;
+        }
+        var url = text.replace(/\/+$/, '');
+        enterState.url = url;
+        var terms = document.getElementById('termsLink');
+        if (terms) terms.href = url + '/agreement.html';
+        checkServer(url, function(ok, code) {
+          enterState.checking = false;
+          enterState.online = ok;
+          if (ok) {
+            setEnterState('online', '服务器在线 · 点击进入');
+          } else {
+            setEnterState('offline', '服务器离线，暂不可进入' + (code ? '（HTTP ' + code + '）' : ''));
+          }
+        });
+      }, function() {
+        enterState.checking = false;
+        enterState.online = false;
+        setEnterState('offline', '无法获取服务器地址，请检查网络');
+      });
+    }
+
+    // ===== 主流程：读开关；开启时只检测状态并启用按钮，绝不自动跳转 =====
+    function init() {
       hideStatus();
+      setEnterState('checking', '正在检查服务状态…');
+      fetchFromSources('switch.json', function(text) {
+        var config;
+        try {
+          config = JSON.parse(text);
+        } catch (e) {
+          enterState.enabled = true;
+          refresh();
+          return;
+        }
+        if (config.enabled === false) {
+          enterState.enabled = false;
+          enterState.online = false;
+          showSiteClosed(config.message || '');
+          setEnterState('closed', '站点已关闭，暂不可进入');
+          return;
+        }
+        enterState.enabled = true;
+        refresh();
+      }, function() {
+        // switch.json 获取失败，默认开启（向后兼容）
+        enterState.enabled = true;
+        refresh();
+      });
+    }
+
+    // 点击时二次校验，避免轮询间隔内服务器已掉线
+    document.getElementById('enterBtn').addEventListener('click', function() {
+      if (!enterState.online || !enterState.url) return;
+      setEnterState('checking', '正在连接服务器…');
+      checkServer(enterState.url, function(ok) {
+        if (ok) {
+          window.location.href = enterState.url;
+        } else {
+          enterState.online = false;
+          setEnterState('offline', '服务器离线，暂不可进入');
+        }
+      });
+    });
+
+    // 掉线后定时重检；恢复在线自动解禁按钮
+    setInterval(function() {
+      if (enterState.enabled && !document.hidden) refresh();
+    }, CHECK_INTERVAL);
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && enterState.enabled) refresh();
+    });
+
+    // 显示站点关闭界面（隐藏进入按钮，避免灰按钮与维护公告同时出现）
+    function showSiteClosed(message) {
+      document.getElementById('enterPanel').classList.add('hidden');
       document.getElementById('siteList').classList.add('show');
       if (message) {
         var msgEl = document.getElementById('maintMsg');
@@ -668,7 +808,9 @@
     function retry() {
       document.getElementById('siteList').classList.remove('show');
       document.getElementById('maintMsg').classList.remove('show');
+      document.getElementById('enterPanel').classList.remove('hidden');
       document.getElementById('statusMsg').style.display = '';
+      document.getElementById('retryLink').style.display = '';
       init();
     }
 
@@ -676,7 +818,7 @@
     init();
 
     (function() {
-      var CURRENT_VERSION = '32';
+      var CURRENT_VERSION = '33';
       try {
         var stored = localStorage.getItem('redirect_portal_version');
         if (stored !== CURRENT_VERSION) {
