@@ -166,68 +166,6 @@
       font-size: 12.5px;
       line-height: 21px;
     }
-    .feature-tags {
-      margin-top: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .feature-tag {
-      font-size: 11px;
-      line-height: 16px;
-      padding: 3px 9px;
-      border-radius: var(--radius-pill);
-      background: var(--bg-layer-2);
-      border: 1px solid var(--border-l1);
-      color: var(--text-secondary);
-      white-space: nowrap;
-    }
-    .feature-tag.accent {
-      background: var(--accent-weak);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* ===== 侧栏底部 meta ===== */
-    .sidebar-footer {
-      flex-shrink: 0;
-      padding: 12px 16px;
-      border-top: 1px solid var(--border-l1);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-      white-space: nowrap;
-    }
-    .conn-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-      padding: 3px 9px;
-      border: 1px solid var(--border-l1);
-      border-radius: var(--radius-pill);
-      font-size: 11px;
-      line-height: 16px;
-      color: var(--text-tertiary);
-    }
-    .conn-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--warning);
-      flex-shrink: 0;
-    }
-    .conn-dot.on { background: var(--success); animation: conn-pulse 2.4s ease-in-out infinite; }
-    .conn-dot.err { background: var(--danger); }
-    @keyframes conn-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .meta-sep { color: var(--text-tertiary); opacity: 0.55; font-size: 11px; }
-    .group-link {
-      border: none; background: none; padding: 0; margin: 0; min-width: 0;
-      font-size: 11px; font-family: inherit; color: var(--text-tertiary);
-      cursor: pointer; white-space: nowrap;
-      transition: color 0.2s ease;
-    }
-    .group-link:hover { color: var(--accent); }
 
     /* ===== 主舞台（背景图之上） ===== */
     .stage {
@@ -399,22 +337,39 @@
     .footer {
       flex-shrink: 0;
       width: 100%;
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
       text-align: center;
       font-size: 12px;
       color: rgba(249, 250, 251, 0.62);
       text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
-      padding: 14px 16px;
       background: rgba(21, 21, 23, 0.42);
       backdrop-filter: blur(10px) saturate(120%);
       -webkit-backdrop-filter: blur(10px) saturate(120%);
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
+    .footer-links {
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .footer-links a {
+      color: rgba(249, 250, 251, 0.72);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .footer-links a:hover { color: var(--accent); }
     html[data-theme="light"] .footer {
       color: rgba(15, 17, 21, 0.58);
       text-shadow: none;
       background: rgba(255, 255, 255, 0.5);
       border-top-color: rgba(0, 0, 0, 0.06);
     }
+    html[data-theme="light"] .footer-links a { color: rgba(15, 17, 21, 0.7); }
 
     /* ===== 一致性层（对齐 personal-site 设计系统） ===== */
     :where(a, button, .site-card, .retry-link, [role="button"], [tabindex]):focus-visible {
@@ -476,12 +431,6 @@
           ACN CLIENT 是面向 ACN 玩家的综合服务平台，在这里可以获取文件资源、使用在线工具、
           提交 ACN ROBOT 自动化任务，并上传与共享网易基岩版结构文件。
         </p>
-        <div class="feature-tags">
-          <span class="feature-tag accent">文件下载</span>
-          <span class="feature-tag">在线工具</span>
-          <span class="feature-tag">ACN ROBOT</span>
-          <span class="feature-tag">资源库</span>
-        </div>
       </section>
 
       <!-- 状态提示（加载中/错误） -->
@@ -506,15 +455,6 @@
       <!-- 维护公告 -->
       <div class="maintenance-msg" id="maintMsg"></div>
     </div>
-
-    <div class="sidebar-footer">
-      <span class="conn-chip">
-        <span class="conn-dot" id="connDot"></span>
-        <span id="connText">连接中</span>
-      </span>
-      <span class="meta-sep">·</span>
-      <button class="group-link" id="groupLink" type="button" title="加入交流群">交流群：1108973507</button>
-    </div>
   </aside>
 
   <!-- 主舞台 -->
@@ -523,19 +463,16 @@
       <div class="stage-mark">ACN</div>
       <div class="stage-sub">CLIENT</div>
     </div>
-    <div class="footer">Copyright &copy; 2026 ACN CLIENT All Rights Reserved.<br>本网站所有权归 ACN CLIENT 所有</div>
+    <footer class="footer">
+      <span>Copyright &copy; 2026 ACN CLIENT All Rights Reserved. 本网站所有权归 ACN CLIENT 所有</span>
+      <span class="footer-links">
+        <a href="#" id="termsLink">用户协议 · 免责声明</a>
+      </span>
+    </footer>
   </main>
 
   <script>
     var REPO = 'xnnkk/Xnnkk-ACN';
-
-    // 侧栏连接状态指示灯
-    function setConn(state, text) {
-      var dot = document.getElementById('connDot');
-      var txt = document.getElementById('connText');
-      if (dot) dot.className = 'conn-dot' + (state ? ' ' + state : '');
-      if (txt) txt.textContent = text;
-    }
 
     function setStatus(text, type) {
       var el = document.getElementById('statusMsg');
@@ -544,10 +481,6 @@
       var retry = document.getElementById('retryLink');
       if (type === 'error') retry.classList.add('show');
       else retry.classList.remove('show');
-      // 连接状态与提示文案保持一致
-      if (type === 'success') setConn('on', '已连接');
-      else if (type === 'error') setConn('err', '已断开');
-      else setConn('', '连接中');
     }
 
     function hideStatus() {
@@ -677,7 +610,11 @@
       setStatus('正在连接服务器...', '');
       fetchFromSources('url.txt', function(text) {
         if (text && text.indexOf('http') === 0) {
-          verifyTunnel(text.replace(/\/+$/, ''));
+          var url = text.replace(/\/+$/, '');
+          // 用户协议链接指向主站协议页
+          var terms = document.getElementById('termsLink');
+          if (terms) terms.href = url + '/agreement.html';
+          verifyTunnel(url);
         } else {
           setStatus('⚠ 服务器暂时无法连接，请检查网络后重试', 'error');
         }
@@ -728,15 +665,6 @@
       document.getElementById('statusMsg').style.display = '';
       init();
     }
-
-    // 交流群入口
-    (function () {
-      var btn = document.getElementById('groupLink');
-      if (!btn) return;
-      btn.addEventListener('click', function () {
-        window.open('https://qm.qq.com/q/CYWims8arg', '_blank', 'noopener');
-      });
-    })();
 
     // 启动
     init();
