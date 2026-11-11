@@ -772,18 +772,11 @@
       });
     }
 
-    // 点击时二次校验，避免轮询间隔内服务器已掉线
+    // 打开页面时已开始检测（init -> refresh -> checkServer），在线才解禁按钮；
+    // 点击时直接跳转，不再做二次校验，避免多一次等待。
     document.getElementById('enterBtn').addEventListener('click', function() {
       if (!enterState.online || !enterState.url) return;
-      setEnterState('checking', '正在连接服务器…');
-      checkServer(enterState.url, function(ok) {
-        if (ok) {
-          window.location.href = enterState.url;
-        } else {
-          enterState.online = false;
-          setEnterState('offline', '服务器离线，暂不可进入');
-        }
-      });
+      window.location.href = enterState.url;
     });
 
     // 掉线后定时重检；恢复在线自动解禁按钮
@@ -818,7 +811,7 @@
     init();
 
     (function() {
-      var CURRENT_VERSION = '33';
+      var CURRENT_VERSION = '34';
       try {
         var stored = localStorage.getItem('redirect_portal_version');
         if (stored !== CURRENT_VERSION) {
