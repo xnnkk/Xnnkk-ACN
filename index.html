@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ACN</title>
-  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='10' fill='%233964FE'/><text x='18' y='25' text-anchor='middle' font-size='19' font-weight='600' fill='%23FFFFFF' font-family='sans-serif'>A</text></svg>" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -85,34 +85,60 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
 
-    .logo {
-      width: 64px; height: 64px;
-      border-radius: var(--radius-lg);
-      background: var(--accent);
+    /* ===== 顶栏：搬运主站左上角品牌区（logo + 名称） ===== */
+    .topbar {
+      flex-shrink: 0;
+      height: 60px;
+      padding: 0 16px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 34px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 32px rgba(57,100,254,0.22);
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border-l1);
     }
-    .title {
-      font-size: 22px;
-      font-weight: 700;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-svg { display: block; flex-shrink: 0; }
+    .brand-name {
+      font-size: 16px;
+      font-weight: 600;
       color: var(--text-primary);
-      letter-spacing: 1px;
-      margin-bottom: 6px;
+      letter-spacing: 0.02em;
     }
-    .subtitle {
-      font-size: 14px;
+
+    /* ===== 主区域 ===== */
+    .main-area {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px 88px;
+    }
+
+    /* ===== Hero（对齐主站首页 hero） ===== */
+    .hero {
+      margin-bottom: 22px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 34px;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+    .hero p {
+      margin-top: 5px;
       color: var(--text-tertiary);
-      margin-bottom: 32px;
+      font-size: 13px;
+      line-height: 21px;
     }
 
     /* ===== 状态提示 ===== */
@@ -272,31 +298,45 @@
   </style>
 </head>
 <body>
-  <div class="logo">A</div>
-  <div class="title">ACN</div>
-  <div class="subtitle">文件下载</div>
+  <!-- 顶栏：主站左上角品牌区（logo + 名称） -->
+  <header class="topbar">
+    <a class="brand" href="./">
+      <svg class="logo-svg" width="28" height="28" viewBox="0 0 36 36" aria-hidden="true">
+        <rect width="36" height="36" rx="10" fill="#3964FE"/>
+        <text x="18" y="25" text-anchor="middle" font-size="19" font-weight="600" fill="#FFFFFF" font-family="sans-serif">A</text>
+      </svg>
+      <span class="brand-name">ACN CLIENT</span>
+    </a>
+  </header>
 
-  <!-- 状态提示（加载中/错误） -->
-  <div class="status" id="statusMsg">
-    <div class="spinner" id="spinner"></div>
-    <span>正在连接服务器...</span>
-  </div>
-  <div class="retry-link" id="retryLink" onclick="retry()">重试</div>
+  <main class="main-area">
+    <section class="hero">
+      <h1>文件下载</h1>
+      <p>文件获取 · 在线工具，即点即用</p>
+    </section>
 
-  <!-- 站点选择列表（开关关闭时显示） -->
-  <div class="site-list" id="siteList">
-    <div class="site-card disabled" id="siteCard">
-      <div class="site-card-icon inactive" id="siteIcon">📦</div>
-      <div class="site-card-info">
-        <div class="site-card-name" id="siteName">下载中心</div>
-        <div class="site-card-desc">文件下载</div>
-      </div>
-      <div class="site-card-badge badge-closed" id="siteBadge">已关闭</div>
+    <!-- 状态提示（加载中/错误） -->
+    <div class="status" id="statusMsg">
+      <div class="spinner" id="spinner"></div>
+      <span>正在连接服务器...</span>
     </div>
-  </div>
+    <div class="retry-link" id="retryLink" onclick="retry()">重试</div>
 
-  <!-- 维护公告 -->
-  <div class="maintenance-msg" id="maintMsg"></div>
+    <!-- 站点选择列表（开关关闭时显示） -->
+    <div class="site-list" id="siteList">
+      <div class="site-card disabled" id="siteCard">
+        <div class="site-card-icon inactive" id="siteIcon">📦</div>
+        <div class="site-card-info">
+          <div class="site-card-name" id="siteName">下载中心</div>
+          <div class="site-card-desc">文件下载</div>
+        </div>
+        <div class="site-card-badge badge-closed" id="siteBadge">已关闭</div>
+      </div>
+    </div>
+
+    <!-- 维护公告 -->
+    <div class="maintenance-msg" id="maintMsg"></div>
+  </main>
 
   <div class="footer">Copyright &copy; 2026 ACN CLIENT All Rights Reserved.<br>本网站所有权归 ACN CLIENT 所有</div>
 
