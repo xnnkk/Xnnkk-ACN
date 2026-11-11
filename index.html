@@ -90,7 +90,8 @@
     /* ===== 背景层（仓库静态资源，纯色蒙层，无渐变） ===== */
     .site-bg {
       position: fixed;
-      inset: 0;
+      /* 桌面：左侧 300px 固定纯色侧栏会盖住背景，背景只铺舞台区，避免人物被压在侧栏下 */
+      inset: 0 0 0 300px;
       z-index: 0;
       background: var(--bg-base) url('assets/bg/user/bg-acn-client-window.jpg') center center / cover no-repeat;
     }
@@ -403,6 +404,11 @@
       }
       .stage-inner { padding: 48px 0; }
       .stage-mark { font-size: 44px; letter-spacing: 6px; }
+      /* 窄屏横版背景会被 cover 裁成竖条：换成同源竖版裁切，人物完整可见且不被顶部侧栏块盖住脸 */
+      .site-bg {
+        left: 0;
+        background-image: url('assets/bg/user/bg-acn-client-window-mobile.jpg');
+      }
     }
   </style>
 </head>
