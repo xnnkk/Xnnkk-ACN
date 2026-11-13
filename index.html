@@ -168,50 +168,109 @@
       line-height: 21px;
     }
 
-    /* ===== 进入按钮 + 服务器状态（侧栏内，纯色背景适配） ===== */
-    .enter-panel {
+    /* ===== 主舞台（背景图之上） ===== */
+    .stage {
+      position: relative;
+      z-index: 1;
+      margin-left: 300px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
+      align-items: center;
+      padding: 32px 24px 0;
+    }
+    .stage-inner {
+      flex: 1;
       width: 100%;
-      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
+      padding: 7vh 40px 0;
+    }
+    .stage-mark {
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      line-height: 1.1;
+      color: rgba(249, 250, 251, 0.92);
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+    }
+    .stage-sub {
+      margin-top: 6px;
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: rgba(249, 250, 251, 0.62);
+    }
+    html[data-theme="light"] .stage-mark { color: rgba(15, 17, 21, 0.86); text-shadow: 0 2px 18px rgba(255, 255, 255, 0.5); }
+    html[data-theme="light"] .stage-sub { color: rgba(15, 17, 21, 0.55); }
+
+    /* ===== 进入按钮（黑白 + 毛玻璃 + 圆角，纯色描边，不用渐变边框） ===== */
+    .enter-panel {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
     }
     .enter-panel.hidden { display: none; }
     .enter-btn {
-      width: 100%;
-      height: 44px;
-      padding: 0 20px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-l2);
-      background: var(--bg-layer-1);
-      color: var(--text-primary);
-      font-size: 14px;
+      min-width: 176px;
+      height: 48px;
+      padding: 0 28px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      background: rgba(255, 255, 255, 0.10);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      color: rgba(249, 250, 251, 0.96);
+      font-size: 15px;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
       cursor: pointer;
       transition: background-color .2s ease, border-color .2s ease, transform .2s ease, opacity .2s ease;
     }
     .enter-btn:hover:not(:disabled) {
-      background: var(--bg-layer-2);
-      border-color: var(--border-l4);
+      background: rgba(255, 255, 255, 0.19);
+      border-color: rgba(255, 255, 255, 0.36);
+      transform: translateY(-1px);
     }
-    .enter-btn:active:not(:disabled) { transform: scale(.99); }
+    .enter-btn:active:not(:disabled) { transform: translateY(0); }
     .enter-btn:disabled, .enter-btn.is-offline {
-      opacity: .45;
+      opacity: .42;
       filter: grayscale(1);
       cursor: not-allowed;
       pointer-events: none;
-      background: var(--bg-layer-1);
-      border-color: var(--border-l1);
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.10);
+    }
+    html[data-theme="light"] .enter-btn {
+      color: rgba(15, 17, 21, 0.92);
+      background: rgba(255, 255, 255, 0.58);
+      border-color: rgba(15, 17, 21, 0.16);
+    }
+    html[data-theme="light"] .enter-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.78);
+      border-color: rgba(15, 17, 21, 0.30);
+    }
+    html[data-theme="light"] .enter-btn:disabled,
+    html[data-theme="light"] .enter-btn.is-offline {
+      background: rgba(240, 240, 242, 0.52);
+      border-color: rgba(15, 17, 21, 0.10);
     }
     .enter-status {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 12.5px;
+      font-size: 13px;
       line-height: 1.5;
-      color: var(--text-tertiary);
+      color: rgba(249, 250, 251, 0.74);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+    }
+    html[data-theme="light"] .enter-status {
+      color: rgba(15, 17, 21, 0.66);
+      text-shadow: 0 1px 8px rgba(255, 255, 255, 0.6);
     }
     .enter-dot {
       flex: none;
@@ -251,49 +310,150 @@
     }
     .retry-link.show { display: inline-block; }
 
-    /* ===== 主舞台（背景图之上，仅保留 ACN 字样） ===== */
-    .stage {
-      position: relative;
-      z-index: 1;
-      margin-left: 300px;
-      min-height: 100vh;
-      display: flex;
+    /* ===== 站点选择卡片 ===== */
+    .site-list {
+      display: none;
       flex-direction: column;
-      align-items: center;
-      padding: 32px 24px 0;
-    }
-    .stage-inner {
-      flex: 1;
+      gap: 12px;
       width: 100%;
+    }
+    .site-list.show { display: flex; }
+    .site-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-layer-1);
+      border: 1px solid var(--border-l2);
+      cursor: pointer;
+      transition: background-color var(--ds-fast) var(--ds-ease),
+                  border-color var(--ds-fast) var(--ds-ease),
+                  transform var(--ds-fast) var(--ds-ease),
+                  box-shadow var(--ds-fast) var(--ds-ease);
+      text-decoration: none;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-lv2);
+    }
+    .site-card:not(.disabled):hover {
+      background: var(--bg-layer-2);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lv3);
+    }
+    .site-card:active:not(.disabled) { transform: scale(.985); }
+    .site-card.disabled {
+      background: var(--bg-layer-1);
+      border-color: var(--border-l1);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    .site-card-icon {
+      width: 42px; height: 42px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .site-card-icon.active {
+      background: var(--accent);
+      color: #ffffff;
+    }
+    .site-card-icon.inactive {
+      background: var(--bg-layer-3);
+      color: var(--text-tertiary);
+    }
+    .site-card-info { flex: 1; }
+    .site-card-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .site-card.disabled .site-card-name {
+      color: var(--text-tertiary);
+    }
+    .site-card-desc {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .site-card-badge {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-closed {
+      background: rgba(242,90,90,0.14);
+      color: var(--danger);
+      border: 1px solid rgba(242,90,90,0.2);
+    }
+    .badge-open {
+      background: rgba(34,197,94,0.14);
+      color: var(--success);
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .maintenance-msg {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      background: rgba(245,158,11,0.10);
+      border: 1px solid rgba(245,158,11,0.2);
+      color: var(--warning);
+      font-size: 13px;
+      text-align: center;
+      width: 100%;
+      line-height: 1.6;
+    }
+    .maintenance-msg.show { display: block; }
+
+    .footer {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 10px 16px;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      justify-content: flex-start;
-      text-align: left;
-      padding: 7vh 40px 0;
-    }
-    .stage-mark {
-      font-size: 56px;
-      font-weight: 700;
-      letter-spacing: 8px;
-      line-height: 1.1;
-      color: rgba(249, 250, 251, 0.92);
-      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
-    }
-    .stage-sub {
-      margin-top: 6px;
-      font-size: 13px;
-      letter-spacing: 4px;
+      gap: 4px;
+      text-align: center;
+      font-size: 12px;
       color: rgba(249, 250, 251, 0.62);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+      background: rgba(21, 21, 23, 0.42);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
-    html[data-theme="light"] .stage-mark { color: rgba(15, 17, 21, 0.86); text-shadow: 0 2px 18px rgba(255, 255, 255, 0.5); }
-    html[data-theme="light"] .stage-sub { color: rgba(15, 17, 21, 0.55); }
+    .footer-links {
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .footer-links a {
+      color: rgba(249, 250, 251, 0.72);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .footer-links a:hover { color: var(--accent); }
+    html[data-theme="light"] .footer {
+      color: rgba(15, 17, 21, 0.58);
+      text-shadow: none;
+      background: rgba(255, 255, 255, 0.5);
+      border-top-color: rgba(0, 0, 0, 0.06);
+    }
+    html[data-theme="light"] .footer-links a { color: rgba(15, 17, 21, 0.7); }
 
     /* ===== 一致性层（对齐 personal-site 设计系统） ===== */
-    :where(a, button, .retry-link, [role="button"], [tabindex]):focus-visible {
+    :where(a, button, .site-card, .retry-link, [role="button"], [tabindex]):focus-visible {
       outline: 2px solid var(--text-primary);
       outline-offset: 2px;
     }
+    .site-card:focus-visible { outline-color: var(--accent); }
     ::selection { background: rgba(160,164,170,0.30); color: var(--text-primary); }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -320,6 +480,8 @@
       }
       .stage-inner { padding: 48px 0; }
       .stage-mark { font-size: 44px; letter-spacing: 6px; }
+      .enter-panel { margin-top: 22px; }
+      .enter-btn { width: 100%; max-width: 320px; height: 46px; }
       /* 窄屏横版背景会被 cover 裁成竖条：换成同源竖版裁切，人物完整可见且不被顶部侧栏块盖住脸 */
       .site-bg {
         left: 0;
@@ -332,7 +494,7 @@
   <!-- 背景层：仓库静态资源 -->
   <div class="site-bg" aria-hidden="true"></div>
 
-  <!-- 左侧边栏：品牌 + 网站介绍 + 进入按钮/状态 + 错误提示 -->
+  <!-- 左侧边栏：品牌 + 网站介绍 + 状态 -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <a class="brand" href="./">
@@ -347,19 +509,13 @@
     <div class="sidebar-body">
       <!-- 网站介绍 -->
       <section class="intro">
-        <h1 class="intro-title">ACN CLIENT</h1>
-        <p class="intro-sub">文件获取 · 在线工具 · MC导入机器人</p>
+        <h1 class="intro-title">文件下载</h1>
+        <p class="intro-sub">文件获取 · 在线工具，即点即用</p>
         <p class="intro-text">
-          ACN CLIENT 是面向 《我的世界中国版》 玩家的综合服务平台，在这里可以获取文件资源、使用在线工具、
-          提交 ACN ROBOT 机器人任务。
+          ACN CLIENT 是面向 ACN 玩家的综合服务平台，在这里可以获取文件资源、使用在线工具、
+          提交 ACN ROBOT 自动化任务，并上传与共享网易基岩版结构文件。
         </p>
       </section>
-
-      <!-- 进入按钮 + 服务器状态（已移入侧栏） -->
-      <div class="enter-panel" id="enterPanel">
-        <button class="enter-btn is-offline" id="enterBtn" type="button" disabled>进入网站</button>
-        <div class="enter-status"><span class="enter-dot checking" id="enterDot"></span><span id="enterStatusText">正在检查服务器状态…</span></div>
-      </div>
 
       <!-- 状态提示（加载中/错误） -->
       <div class="status" id="statusMsg">
@@ -367,6 +523,21 @@
         <span>正在连接服务器...</span>
       </div>
       <div class="retry-link" id="retryLink" onclick="retry()">重试</div>
+
+      <!-- 站点选择列表（开关关闭时显示） -->
+      <div class="site-list" id="siteList">
+        <div class="site-card disabled" id="siteCard">
+          <div class="site-card-icon inactive" id="siteIcon">📦</div>
+          <div class="site-card-info">
+            <div class="site-card-name" id="siteName">下载中心</div>
+            <div class="site-card-desc">文件下载</div>
+          </div>
+          <div class="site-card-badge badge-closed" id="siteBadge">已关闭</div>
+        </div>
+      </div>
+
+      <!-- 维护公告 -->
+      <div class="maintenance-msg" id="maintMsg"></div>
     </div>
   </aside>
 
@@ -375,7 +546,17 @@
     <div class="stage-inner">
       <div class="stage-mark">ACN</div>
       <div class="stage-sub">CLIENT</div>
+      <div class="enter-panel" id="enterPanel">
+        <button class="enter-btn is-offline" id="enterBtn" type="button" disabled>进入网站</button>
+        <div class="enter-status"><span class="enter-dot checking" id="enterDot"></span><span id="enterStatusText">正在检查服务器状态…</span></div>
+      </div>
     </div>
+    <footer class="footer">
+      <span>Copyright &copy; 2026 ACN CLIENT All Rights Reserved.</span>
+      <span class="footer-links">
+        <a href="#" id="termsLink">用户协议 · 免责声明</a>
+      </span>
+    </footer>
   </main>
 
   <script>
@@ -500,7 +681,7 @@
       btn.textContent = kind === 'checking' ? '正在检查…' : '进入网站';
       dot.className = 'enter-dot ' + kind;
       txt.textContent = text;
-      // 状态只在异常时露出（含「重试」入口）；检查中保持原状，避免轮询闪烁
+      // 侧栏状态只在异常时露出（含「重试」入口）；检查中保持原状，避免轮询闪烁
       if (kind === 'offline' || kind === 'closed') {
         document.getElementById('statusMsg').style.display = '';
         document.getElementById('retryLink').style.display = '';
@@ -544,6 +725,8 @@
         }
         var url = text.replace(/\/+$/, '');
         enterState.url = url;
+        var terms = document.getElementById('termsLink');
+        if (terms) terms.href = url + '/agreement.html';
         checkServer(url, function(ok, code) {
           enterState.checking = false;
           enterState.online = ok;
@@ -576,8 +759,8 @@
         if (config.enabled === false) {
           enterState.enabled = false;
           enterState.online = false;
-          // 关闭原因直接复用状态提示条展示
-          setEnterState('closed', config.message || '站点已关闭，暂不可进入');
+          showSiteClosed(config.message || '');
+          setEnterState('closed', '站点已关闭，暂不可进入');
           return;
         }
         enterState.enabled = true;
@@ -604,18 +787,95 @@
       if (!document.hidden && enterState.enabled) refresh();
     });
 
+    // 显示站点关闭界面（隐藏进入按钮，避免灰按钮与维护公告同时出现）
+    function showSiteClosed(message) {
+      document.getElementById('enterPanel').classList.add('hidden');
+      document.getElementById('siteList').classList.add('show');
+      if (message) {
+        var msgEl = document.getElementById('maintMsg');
+        msgEl.textContent = message;
+        msgEl.classList.add('show');
+      }
+    }
+
     function retry() {
+      document.getElementById('siteList').classList.remove('show');
+      document.getElementById('maintMsg').classList.remove('show');
       document.getElementById('enterPanel').classList.remove('hidden');
       document.getElementById('statusMsg').style.display = '';
       document.getElementById('retryLink').style.display = '';
       init();
     }
 
+    /* ===== 全站点击音效（与主站 frontend/js/sfx.js 行为一致）=====
+       - 仅命中可交互元素时播放；80ms 节流，避免 label→input / 连点叠加
+       - 鼠标点击与键盘 Enter / Space 激活获得一致反馈
+       - localStorage acn_sfx=off 可强制静音
+       - 音频：assets/audio/celestial_on.wav（与主站同一份 0.39s 短音）
+       - 播放失败（自动播放策略拦截 / 缺资源）静默忽略，绝不阻断跳转 */
+    (function() {
+      'use strict';
+      var SRC = 'assets/audio/celestial_on.wav';
+      var THROTTLE = 80, audio = null, last = 0, enabled = true;
+      try { if (localStorage.getItem('acn_sfx') === 'off') enabled = false; } catch (e) {}
+
+      function getAudio() {
+        if (!audio) {
+          audio = new Audio(SRC);
+          audio.preload = 'auto';
+          audio.volume = 0.65;
+        }
+        return audio;
+      }
+      try { getAudio(); } catch (e) {}
+
+      function play() {
+        if (!enabled) return;
+        var now = Date.now();
+        if (now - last < THROTTLE) return;
+        last = now;
+        try {
+          var a = getAudio();
+          a.currentTime = 0;
+          var p = a.play();
+          if (p && p.catch) p.catch(function() {});
+        } catch (e) {}
+      }
+
+      var INTERACTIVE = [
+        'a[href]', 'button', '[role="button"]', '[tabindex]', '[onclick]',
+        '.brand', '.enter-btn', '.site-card', '.retry-link'
+      ].join(',');
+      var SKIP = '[disabled],[aria-disabled="true"],.disabled,.is-disabled,' +
+                 '.site-card.disabled,.enter-btn.is-offline,input,textarea';
+
+      function hit(node) {
+        if (!node || !node.closest) return false;
+        var el = node.closest(INTERACTIVE);
+        if (!el) return false;
+        if (el.matches && el.matches(SKIP)) return false;
+        return true;
+      }
+
+      document.addEventListener('click', function(e) {
+        if (hit(e.target)) play();
+      }, true);
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+        if (e.repeat) return;
+        if (hit(document.activeElement)) play();
+      }, true);
+
+      window.playClickSfx = play;
+      window.setClickSfxEnabled = function(v) { enabled = !!v; };
+      window.isClickSfxEnabled = function() { return enabled; };
+    })();
+
     // 启动
     init();
 
     (function() {
-      var CURRENT_VERSION = '35';
+      var CURRENT_VERSION = '36';
       try {
         var stored = localStorage.getItem('redirect_portal_version');
         if (stored !== CURRENT_VERSION) {
