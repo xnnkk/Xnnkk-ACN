@@ -1,8 +1,9 @@
 /* ACN 战术点击反馈（Delta Force / 三角洲行动 命中标记）
  * 纯原生、无依赖、自注入样式；只在点击坐标处绘制，不改动任何页面元素与版式。
  *
- * 形态：一次点击 = 四条朝中心收拢的白色斜线（\ / 上排，/ \ 下排），
- *       即游戏「命中反馈 / hitmarker」的四段斜线，中间留空、彼此不相连。
+ * 形态：一次点击 = 四条从四个角朝中心斜插的白色细线（\ / 上排，/ \ 下排），
+ *       即游戏「命中反馈 / hitmarker」的 X 形四臂：内端几乎汇聚于中心、
+ *       彼此不相连，外端伸向四角；动画再由四角向中心收拢。
  *       没有方框、四角括号、扫描线、中心点、粒子、发光、回弹。
  *
  * 依据：游戏内「命中反馈 / 击杀图标」为屏幕中央白色 X 形四段斜线，
@@ -56,14 +57,17 @@
     'z-index:200000;--x:#fff}',
     '.acn-cfx .hit{position:absolute;left:0;top:0;display:block;',
     'animation:acn-hit .30s cubic-bezier(.2,0,0,1) both}',
+    /* 四条细线各占一个角，沿对角线朝中心斜插，内端几乎汇聚、彼此不连 */
     '.acn-cfx .hit b{position:absolute;display:block;left:0;top:0;',
-    'width:3px;height:14px;margin:-7px 0 0 -1.5px;background:var(--x)}',
-    '.acn-cfx .hit b:nth-child(1){transform:translate(-12px,-12px) rotate(45deg)}',
-    '.acn-cfx .hit b:nth-child(2){transform:translate(12px,-12px) rotate(-45deg)}',
-    '.acn-cfx .hit b:nth-child(3){transform:translate(12px,12px) rotate(45deg)}',
-    '.acn-cfx .hit b:nth-child(4){transform:translate(-12px,12px) rotate(-45deg)}',
-    /* 由外向内收拢 → 短暂停留 → 熄灭，无回弹、无位移 */
-    '@keyframes acn-hit{0%{opacity:0;transform:scale(1.55)}',
+    'width:2px;height:22px;margin:-11px 0 0 -1px;background:var(--x)}',
+    /* 注意：CSS 竖线 rotate(45deg) 得到 / ，rotate(-45deg) 得到 \ ；
+       左上与右下必须同为 \ ，右上与左下必须同为 / ，才会共线成 X */
+    '.acn-cfx .hit b:nth-child(1){transform:translate(-9px,-9px) rotate(-45deg)}',
+    '.acn-cfx .hit b:nth-child(2){transform:translate(9px,-9px) rotate(45deg)}',
+    '.acn-cfx .hit b:nth-child(3){transform:translate(9px,9px) rotate(-45deg)}',
+    '.acn-cfx .hit b:nth-child(4){transform:translate(-9px,9px) rotate(45deg)}',
+    /* 由四角向中心收拢 → 短暂停留 → 熄灭，无回弹、无位移 */
+    '@keyframes acn-hit{0%{opacity:0;transform:scale(1.65)}',
     '22%{opacity:1;transform:scale(1)}',
     '68%{opacity:1;transform:scale(.94)}',
     '100%{opacity:0;transform:scale(.86)}}',
