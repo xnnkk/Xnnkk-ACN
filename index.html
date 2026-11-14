@@ -348,10 +348,10 @@
       <!-- 网站介绍 -->
       <section class="intro">
         <h1 class="intro-title">文件下载</h1>
-        <p class="intro-sub">文件获取 · 在线工具，即点即用</p>
+        <p class="intro-sub">文件获取 · 在线工具 · MC机器人建筑导入</p>
         <p class="intro-text">
-          ACN CLIENT 是面向 ACN 玩家的综合服务平台，在这里可以获取文件资源、使用在线工具、
-          提交 ACN ROBOT 自动化任务，并上传与共享网易基岩版结构文件。
+          ACN CLIENT 是面向 《我的世界中国版》 玩家的综合服务平台，在这里可以获取文件资源、使用在线工具、
+          提交 ACN ROBOT 自动化建筑任务。
         </p>
       </section>
 
@@ -534,7 +534,7 @@
     function refresh() {
       if (!enterState.enabled || enterState.checking) return;
       enterState.checking = true;
-      setEnterState('checking', '正在检查服务器状态…');
+      setEnterState('checking', '正在检查服务器状态...');
       fetchFromSources('url.txt', function(text) {
         if (!text || text.indexOf('http') !== 0) {
           enterState.checking = false;
@@ -563,7 +563,7 @@
     // ===== 主流程：读开关；开启时只检测状态并启用按钮，绝不自动跳转 =====
     function init() {
       hideStatus();
-      setEnterState('checking', '正在检查服务状态…');
+      setEnterState('checking', '正在检查服务状态...');
       fetchFromSources('switch.json', function(text) {
         var config;
         try {
